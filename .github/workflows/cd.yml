@@ -250,7 +250,7 @@ jobs:
             npm publish ${{ steps.pkg.outputs.flags }} --provenance
           fi
 
-          npm access public "${PACKAGE_NAME}" --registry https://registry.npmjs.org
+          npm access set status=public "${PACKAGE_NAME}" --registry https://registry.npmjs.org
 
           PUBLIC_NPMRC="$(mktemp)"
           PUBLIC_CACHE="$(mktemp -d)"
