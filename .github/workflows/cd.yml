@@ -239,4 +239,31 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
-          npm publish ${{ steps.pkg.outputs.flags }} --provenance
+          set -euo pipefail
+
+          PACKAGE_NAME="${{ steps.pkg.outputs.name }}"
+          PACKAGE_VERSION="${{ steps.pkg.outputs.version }}"
+
+          if npm view "${PACKAGE_NAME}@${PACKAGE_VERSION}" version >/dev/null 2>&1; then
+            echo "${PACKAGE_NAME}@${PACKAGE_VERSION} already exists on npm for the publishing token; skipping publish."
+          else
+            npm publish ${{ steps.pkg.outputs.flags }} --provenance
+          fi
+
+          npm access public "${PACKAGE_NAME}" --registry https://registry.npmjs.org
+
+          PUBLIC_NPMRC="$(mktemp)"
+          PUBLIC_CACHE="$(mktemp -d)"
+          for attempt in 1 2 3 4 5 6; do
+            if npm view "${PACKAGE_NAME}@${PACKAGE_VERSION}" version \
+              --registry https://registry.npmjs.org \
+              --userconfig "${PUBLIC_NPMRC}" \
+              --cache "${PUBLIC_CACHE}" >/dev/null 2>&1; then
+              echo "Verified public npm package ${PACKAGE_NAME}@${PACKAGE_VERSION}."
+              exit 0
+            fi
+            sleep 10
+          done
+
+          echo "Package ${PACKAGE_NAME}@${PACKAGE_VERSION} was not publicly visible on npm after publish." >&2
+          exit 1
