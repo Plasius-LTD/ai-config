@@ -1,6 +1,6 @@
 {
   "name": "@plasius/ai-config",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Provider and environment configuration contracts for the Plasius agentic AI package family.",
   "type": "module",
   "sideEffects": false,
