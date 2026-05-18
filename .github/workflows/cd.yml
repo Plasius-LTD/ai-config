@@ -26,6 +26,7 @@ permissions:
 jobs:
   publish:
     runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
     environment: production
     steps:
       - name: Checkout
@@ -140,11 +141,14 @@ jobs:
             exit 0
           fi
 
+<<<<<<< HEAD
+=======
           if grep -q "^## \[${VERSION}\]" "$FILE"; then
             echo "CHANGELOG.md already contains a ${VERSION} release section; skipping changelog update."
             exit 0
           fi
 
+>>>>>>> origin/main
           DATE=$(date -u +%Y-%m-%d)
           VERSION_LINE="## [${VERSION}] - ${DATE}"
 
@@ -212,15 +216,38 @@ jobs:
 
           git add "$FILE"
           git commit -m "docs(changelog): release v${VERSION}"
+<<<<<<< HEAD
+
+      - name: Push version commit and tags after validation
+        run: |
+          git push --follow-tags
+
+      - name: Create GitHub Release from tag (first-party)
+=======
           git push
 
       - name: Create GitHub Release draft (immutable-safe)
+>>>>>>> origin/main
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
           TAG="${{ steps.pkg.outputs.tag }}"
           if gh release view "$TAG" >/dev/null 2>&1; then
+<<<<<<< HEAD
+            echo "Release $TAG already exists; uploading SBOM asset."
+          else
+            gh release create "$TAG" \
+              --title "Release $TAG" \
+              --generate-notes \
+              --latest
+          fi
+          # Upload/overwrite the SBOM asset on the release
+          if [ -f sbom.cdx.json ]; then
+            gh release upload "$TAG" sbom.cdx.json --clobber
+          else
+            echo "No SBOM generated; skipping upload."
+=======
             IS_DRAFT="$(gh release view "$TAG" --json isDraft --jq '.isDraft')"
             if [ "$IS_DRAFT" != "true" ]; then
               echo "Release $TAG already exists and is published. Immutable releases cannot be modified after publication; cut a new version instead."
@@ -239,12 +266,16 @@ jobs:
             else
               gh release create "$TAG"                 --title "Release $TAG"                 --generate-notes                 --verify-tag                 --draft
             fi
+>>>>>>> origin/main
           fi
 
       - name: Publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
+<<<<<<< HEAD
+          npm publish ${{ steps.pkg.outputs.flags }} --provenance
+=======
           set -euo pipefail
 
           PACKAGE_NAME="${{ steps.pkg.outputs.name }}"
@@ -291,3 +322,4 @@ jobs:
           else
             echo "Release $TAG is already published; skipping publication."
           fi
+>>>>>>> origin/main
