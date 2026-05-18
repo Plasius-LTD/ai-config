@@ -26,6 +26,7 @@ permissions:
 jobs:
   publish:
     runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
     environment: production
     steps:
       - name: Checkout
@@ -80,9 +81,7 @@ jobs:
             # shellcheck disable=SC2086
             NEW_VER=$(sh -lc "$BUMP_CMD")
           fi
-
           echo "New version: $NEW_VER"
-          git push --follow-tags
           
           # Expose tag (vX.Y.Z) and version (X.Y.Z) for later steps
           VER_NO_V=${NEW_VER#v}
@@ -207,7 +206,10 @@ jobs:
 
           git add "$FILE"
           git commit -m "docs(changelog): release v${VERSION}"
-          git push
+
+      - name: Push version commit and tags after validation
+        run: |
+          git push --follow-tags
 
       - name: Create GitHub Release from tag (first-party)
         env:
