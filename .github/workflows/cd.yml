@@ -81,7 +81,9 @@ jobs:
             # shellcheck disable=SC2086
             NEW_VER=$(sh -lc "$BUMP_CMD")
           fi
+
           echo "New version: $NEW_VER"
+          git push --follow-tags
           
           # Expose tag (vX.Y.Z) and version (X.Y.Z) for later steps
           VER_NO_V=${NEW_VER#v}
@@ -139,6 +141,14 @@ jobs:
             exit 0
           fi
 
+<<<<<<< HEAD
+=======
+          if grep -q "^## \[${VERSION}\]" "$FILE"; then
+            echo "CHANGELOG.md already contains a ${VERSION} release section; skipping changelog update."
+            exit 0
+          fi
+
+>>>>>>> origin/main
           DATE=$(date -u +%Y-%m-%d)
           VERSION_LINE="## [${VERSION}] - ${DATE}"
 
@@ -206,18 +216,25 @@ jobs:
 
           git add "$FILE"
           git commit -m "docs(changelog): release v${VERSION}"
+<<<<<<< HEAD
 
       - name: Push version commit and tags after validation
         run: |
           git push --follow-tags
 
       - name: Create GitHub Release from tag (first-party)
+=======
+          git push
+
+      - name: Create GitHub Release draft (immutable-safe)
+>>>>>>> origin/main
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
           TAG="${{ steps.pkg.outputs.tag }}"
           if gh release view "$TAG" >/dev/null 2>&1; then
+<<<<<<< HEAD
             echo "Release $TAG already exists; uploading SBOM asset."
           else
             gh release create "$TAG" \
@@ -230,10 +247,79 @@ jobs:
             gh release upload "$TAG" sbom.cdx.json --clobber
           else
             echo "No SBOM generated; skipping upload."
+=======
+            IS_DRAFT="$(gh release view "$TAG" --json isDraft --jq '.isDraft')"
+            if [ "$IS_DRAFT" != "true" ]; then
+              echo "Release $TAG already exists and is published. Immutable releases cannot be modified after publication; cut a new version instead."
+              exit 1
+            fi
+
+            echo "Draft release $TAG already exists; refreshing mutable assets."
+            if [ -f sbom.cdx.json ]; then
+              gh release upload "$TAG" sbom.cdx.json --clobber
+            else
+              echo "No SBOM generated; leaving existing draft assets unchanged."
+            fi
+          else
+            if [ -f sbom.cdx.json ]; then
+              gh release create "$TAG" sbom.cdx.json                 --title "Release $TAG"                 --generate-notes                 --verify-tag                 --draft
+            else
+              gh release create "$TAG"                 --title "Release $TAG"                 --generate-notes                 --verify-tag                 --draft
+            fi
+>>>>>>> origin/main
           fi
 
       - name: Publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
+<<<<<<< HEAD
           npm publish ${{ steps.pkg.outputs.flags }} --provenance
+=======
+          set -euo pipefail
+
+          PACKAGE_NAME="${{ steps.pkg.outputs.name }}"
+          PACKAGE_VERSION="${{ steps.pkg.outputs.version }}"
+
+          if npm view "${PACKAGE_NAME}@${PACKAGE_VERSION}" version >/dev/null 2>&1; then
+            echo "${PACKAGE_NAME}@${PACKAGE_VERSION} already exists on npm for the publishing token; skipping publish."
+          else
+            npm publish ${{ steps.pkg.outputs.flags }} --provenance
+          fi
+
+          npm access set status=public "${PACKAGE_NAME}" --registry https://registry.npmjs.org
+
+          PUBLIC_NPMRC="$(mktemp)"
+          PUBLIC_CACHE="$(mktemp -d)"
+          for attempt in 1 2 3 4 5 6; do
+            if npm view "${PACKAGE_NAME}@${PACKAGE_VERSION}" version \
+              --registry https://registry.npmjs.org \
+              --userconfig "${PUBLIC_NPMRC}" \
+              --cache "${PUBLIC_CACHE}" >/dev/null 2>&1; then
+              echo "Verified public npm package ${PACKAGE_NAME}@${PACKAGE_VERSION}."
+              exit 0
+            fi
+            sleep 10
+          done
+
+          echo "Package ${PACKAGE_NAME}@${PACKAGE_VERSION} was not publicly visible on npm after publish." >&2
+          exit 1
+
+      - name: Publish GitHub Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          TAG="${{ steps.pkg.outputs.tag }}"
+          if ! gh release view "$TAG" >/dev/null 2>&1; then
+            echo "Expected draft release $TAG to exist before publication."
+            exit 1
+          fi
+
+          IS_DRAFT="$(gh release view "$TAG" --json isDraft --jq '.isDraft')"
+          if [ "$IS_DRAFT" = "true" ]; then
+            gh release edit "$TAG" --draft=false --latest
+          else
+            echo "Release $TAG is already published; skipping publication."
+          fi
+>>>>>>> origin/main
