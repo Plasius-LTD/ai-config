@@ -10,7 +10,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
   - (placeholder)
 
 - **Changed**
-  - (placeholder)
+  - Refreshed direct development dependency baselines to the latest stable published `eslint`, `vitest`, `@typescript-eslint/*`, and `@types/node` releases.
 
 - **Fixed**
   - (placeholder)
