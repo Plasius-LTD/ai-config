@@ -10,6 +10,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
   - (placeholder)
 
 - **Changed**
+  - (placeholder)
+
+- **Fixed**
+  - (placeholder)
+
+- **Security**
+  - (placeholder)
+
+## [0.1.5] - 2026-06-22
+
+- **Added**
+  - (placeholder)
+
+- **Changed**
   - Refreshed direct development dependency baselines to the latest stable published `eslint`, `vitest`, `@typescript-eslint/*`, and `@types/node` releases.
 
 - **Fixed**
@@ -71,3 +85,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 [0.1.1]: https://github.com/Plasius-LTD/ai-config/releases/tag/v0.1.1
 [0.1.2]: https://github.com/Plasius-LTD/ai-config/releases/tag/v0.1.2
 [0.1.3]: https://github.com/Plasius-LTD/ai-config/releases/tag/v0.1.3
+[0.1.5]: https://github.com/Plasius-LTD/ai-config/releases/tag/v0.1.5
