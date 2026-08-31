@@ -12,9 +12,11 @@ const ciWorkflow = readFileSync(
 );
 
 describe("npm release trust boundary", () => {
-  it("runs public package CI on isolated GitHub-hosted capacity", () => {
-    expect(ciWorkflow).toContain("runs-on: ubuntu-latest");
-    expect(ciWorkflow).not.toContain("self-hosted");
+  it("isolates pull-request validation from main-branch runners", () => {
+    expect(ciWorkflow).toContain(
+      "runs-on: ${{ fromJSON(github.event_name == 'pull_request' && '[\"ubuntu-latest\"]' || '[\"self-hosted\",\"Linux\",\"X64\"]') }}",
+    );
+    expect(ciWorkflow).not.toContain("pull_request_target");
     expect(ciWorkflow).not.toContain("CI_RUNNER_LABELS");
   });
 
