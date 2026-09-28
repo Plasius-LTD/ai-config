@@ -12,6 +12,12 @@ const ciWorkflow = readFileSync(
 );
 
 describe("npm release trust boundary", () => {
+  it("exports npm caches only from disposable GitHub-hosted runners", () => {
+    expect(ciWorkflow).toContain("cache: ${{ runner.environment == 'github-hosted' && 'npm' || '' }}");
+    expect(ciWorkflow).not.toMatch(/cache:\s*['"]npm['"]/);
+    expect(ciWorkflow).toContain("npm ci --no-fund --no-audit --legacy-peer-deps");
+  });
+
   it("isolates pull-request validation from main-branch runners", () => {
     expect(ciWorkflow).toContain(
       "runs-on: ${{ fromJSON(github.event_name == 'pull_request' && '[\"ubuntu-latest\"]' || '[\"self-hosted\",\"Linux\",\"X64\"]') }}",
