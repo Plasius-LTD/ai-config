@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ## [Unreleased]
 
+- Keep remote npm cache export on disposable GitHub-hosted jobs only, preventing persistent runner cleanup from delaying validated releases.
+
 - Refresh npm dependency lockfile to current supported stable versions (weekly maintenance, 2026-09-28).
 
 - **Added**
